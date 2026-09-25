@@ -182,8 +182,15 @@
 .rte .ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #97a8a6; pointer-events: none; height: 0; }
 .rte .ProseMirror img { cursor: pointer; max-width: 100%; }
 .rte .ProseMirror img.ProseMirror-selectednode { outline: 4px solid var(--coral); }
-.rte .ProseMirror .selectedCell { background: var(--teal-soft); }
-.rte .ProseMirror table { table-layout: fixed; }
+/* Tables: the site draws only row lines, but in the editor every cell gets a border,
+   so empty cells can be seen and clicked. Wide tables scroll sideways. */
+.rte .ProseMirror .tableWrapper { overflow-x: auto; margin: 1.6em 0; }
+.rte .ProseMirror table { table-layout: fixed; margin: 0; border: 1px solid var(--line-strong); }
+.rte .ProseMirror th, .rte .ProseMirror td { position: relative; min-width: 90px; height: 44px; border: 1px solid var(--line-strong); }
+.rte .ProseMirror th { border-color: rgba(255, 255, 255, .22); }
+.rte .ProseMirror th > p:only-child:has(> br.ProseMirror-trailingBreak:only-child)::before { content: "Column title"; float: left; height: 0; color: rgba(255, 255, 255, .5); font-weight: 600; pointer-events: none; }
+/* A tint on top of selected cells keeps their text readable, also on the dark header row. */
+.rte .ProseMirror .selectedCell::after { content: ""; position: absolute; inset: 0; background: rgba(15, 118, 110, .22); pointer-events: none; }
 .rte .ProseMirror a { cursor: text; }
 .rte-source { width: 100%; min-height: 460px; border: 0; padding: 20px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .86rem; line-height: 1.55; resize: vertical; display: block; }
 .rte-source:focus { outline: none; }
