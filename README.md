@@ -44,6 +44,8 @@ Longer articles automatically get a table of contents, a mid-article call-to-act
 
 ## SEO & internal linking
 
+**The whole site is currently hidden from search engines.** Every page has a `noindex` robots tag, every response has an `X-Robots-Tag: noindex` header, and `robots.txt` leaves out the sitemap. Crawling stays allowed, so search engines can see the noindex. To appear in Google, set `SITE_NOINDEX=false` (Vercel → Settings → Environment Variables) and redeploy. The admin dashboard shows a reminder while noindex is on.
+
 - **Admin → SEO & Links** checks every post and page: internal links out, links in from other articles (to find orphans), broken internal links (to deleted, draft or scheduled posts), thin content, missing H2, meta description, excerpt, cover image, alt text, and title length.
 - `sitemap.xml` lists every live post, category and page, with image entries. Noindex content is left out.
 - `robots.txt` blocks `/admin`, `/api/` and internal search results (`/blog?q=`).

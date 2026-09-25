@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { absoluteUrl } from '@/lib/site'
+import { absoluteUrl, SITE_NOINDEX } from '@/lib/site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/api/', '/blog?q='],
       },
     ],
-    sitemap: absoluteUrl('/sitemap.xml'),
+    // Crawling stays allowed so search engines can see the noindex; only the sitemap is withheld.
+    sitemap: SITE_NOINDEX ? undefined : absoluteUrl('/sitemap.xml'),
   }
 }

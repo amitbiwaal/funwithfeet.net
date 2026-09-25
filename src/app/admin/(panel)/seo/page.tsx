@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { NoindexNotice } from '@/components/admin/NoindexNotice'
 import { requireAdmin } from '@/lib/auth'
 import { runSeoAudit } from '@/lib/seo-audit'
 
@@ -23,6 +24,8 @@ export default async function SeoAuditPage() {
           <a className="btn btn-plain" href="/robots.txt" target="_blank" rel="noopener">robots.txt ↗</a>
         </div>
       </div>
+
+      <NoindexNotice />
 
       <div className="adm-stats" data-testid="seo-summary">
         <div className="adm-stat"><strong>{summary.live}</strong><span>Live posts &amp; pages</span></div>

@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { SITE } from '@/lib/site'
+import { SITE, SITE_NOINDEX } from '@/lib/site'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
+  // Pages set their own robots tag through buildMetadata(); this covers the rest (e.g. the 404 page).
+  robots: SITE_NOINDEX ? { index: false, follow: true } : undefined,
   title: 'Fun With Feet: Sell Feet Pics Safely & Make Money Online',
   description:
     'Learn how Fun With Feet works, how to sell feet pics online, stay private, avoid scams, set prices, and start earning from feet pictures safely.',

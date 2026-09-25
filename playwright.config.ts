@@ -37,6 +37,8 @@ export default defineConfig({
       DATA_DIR: 'e2e/.data',
       // Overrides any TURSO_DATABASE_URL in .env.local, so tests never touch the live database.
       TURSO_DATABASE_URL: 'file:e2e/.data/cms.db',
+      // The tests check the normal, indexable SEO tags.
+      SITE_NOINDEX: 'false',
       ADMIN_EMAIL: E2E_ADMIN.email,
       ADMIN_PASSWORD: E2E_ADMIN.password,
       SEED_DEMO_CONTENT: 'true',

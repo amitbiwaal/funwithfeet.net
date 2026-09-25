@@ -7,6 +7,9 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ]
 
+// Same switch as SITE_NOINDEX in src/lib/site.ts: until SITE_NOINDEX=false, every response says noindex.
+const noindex = process.env.SITE_NOINDEX !== 'false'
+
 const nextConfig: NextConfig = {
   // E2E runs build into their own folder so they never touch a running `next dev`.
   distDir: process.env.NEXT_DIST_DIR || '.next',
@@ -18,7 +21,8 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/:path*', headers: securityHeaders },
+      // The admin/api rules below override X-Robots-Tag with their stricter value (the last match wins).
+      { source: '/:path*', headers: noindex ? [...securityHeaders, { key: 'X-Robots-Tag', value: 'noindex' }] : securityHeaders },
       { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
       { source: '/api/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
       // Images in /public/assets never change name, so let browsers keep them for 30 days.

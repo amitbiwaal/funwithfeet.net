@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { NoindexNotice } from '@/components/admin/NoindexNotice'
 import { StatusPill } from '@/components/admin/StatusPill'
 import { requireAdmin } from '@/lib/auth'
 import { countMedia } from '@/lib/media'
@@ -27,6 +28,8 @@ export default async function DashboardPage() {
           <Link className="btn" href="/admin/posts/new">Write a new post</Link>
         </div>
       </div>
+
+      <NoindexNotice />
 
       <div className="adm-stats">
         <Link className="adm-stat" href="/admin/posts?status=published"><strong>{counts.published ?? 0}</strong><span>Published posts</span></Link>

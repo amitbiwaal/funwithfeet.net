@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { absoluteUrl, SITE } from './site'
+import { absoluteUrl, SITE, SITE_NOINDEX } from './site'
 
 type MetaOptions = {
   title: string
@@ -27,7 +27,7 @@ type MetaOptions = {
 export function buildMetadata(o: MetaOptions): Metadata {
   const url = absoluteUrl(o.path)
   const image = absoluteUrl(o.image || SITE.ogImage)
-  const robots = o.noindex
+  const robots = o.noindex || SITE_NOINDEX
     ? { index: false, follow: true, googleBot: { index: false, follow: true } }
     : { index: true, follow: true }
 
