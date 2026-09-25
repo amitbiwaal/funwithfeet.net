@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# Block nothing — full crawl access for search engines
+
+Sitemap: https://funwithfeet.net/sitemap.xml
