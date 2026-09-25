@@ -67,6 +67,7 @@ export function EntryEditor({
   const [pending, startTransition] = useTransition()
   const formRef = useRef<HTMLFormElement>(null)
   const primarySaveRef = useRef<HTMLButtonElement>(null)
+  const noticeRef = useRef<HTMLParagraphElement>(null)
 
   const set = <K extends keyof EditorEntry>(key: K, value: EditorEntry[K]) => {
     setE((prev) => ({ ...prev, [key]: value }))
@@ -80,6 +81,12 @@ export function EntryEditor({
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [dirty])
+
+  // Errors appear above the form, but on small screens the save buttons sit at the
+  // bottom of the screen, so bring the message into view.
+  useEffect(() => {
+    if (notice?.type === 'error') noticeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [notice])
 
   // Ctrl/Cmd + S saves (as draft for drafts, as update for published entries).
   useEffect(() => {
@@ -124,7 +131,7 @@ export function EntryEditor({
   return (
     <>
       {notice && (
-        <p className={`adm-alert ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'} data-testid="editor-notice">
+        <p ref={noticeRef} className={`adm-alert ${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'} data-testid="editor-notice">
           <span>{notice.text}</span>
           {notice.type === 'success' && e.publicPath && (
             <a href={e.publicPath} target="_blank" rel="noopener">
@@ -160,7 +167,7 @@ export function EntryEditor({
 
           <div>
             <div className="adm-slug">
-              <span>funwithfeet.net{prefix}</span>
+              <span><span className="adm-slug-host">funwithfeet.net</span>{prefix}</span>
               <input
                 name="slug"
                 aria-label="URL slug"
@@ -237,29 +244,32 @@ export function EntryEditor({
                 />
                 <p className="adm-hint">Empty = publish now. A future date schedules it.</p>
               </div>
-              <p className={cx('adm-savebar', dirty && 'dirty')}>
-                {dirty ? 'Unsaved changes' : e.updated_at ? `Last saved ${formatDateTime(e.updated_at)}` : 'Not saved yet'}
-              </p>
-              <div className="adm-publish-actions">
-                {isPublished ? (
-                  <>
-                    <button ref={primarySaveRef} className="btn btn-teal" name="intent" value="update" disabled={pending}>
-                      {pending ? 'Saving…' : 'Update'}
-                    </button>
-                    <button className="btn btn-plain" name="intent" value="unpublish" disabled={pending}>
-                      Unpublish
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button ref={primarySaveRef} className="btn btn-plain" name="intent" value="draft" disabled={pending}>
-                      Save draft
-                    </button>
-                    <button className="btn" name="intent" value="publish" disabled={pending}>
-                      {pending ? 'Saving…' : isFutureDate ? 'Schedule' : 'Publish'}
-                    </button>
-                  </>
-                )}
+              {/* On small screens this bar is fixed to the bottom of the screen. */}
+              <div className="adm-publish-bar">
+                <p className={cx('adm-savebar', dirty && 'dirty')}>
+                  {dirty ? 'Unsaved changes' : e.updated_at ? `Last saved ${formatDateTime(e.updated_at)}` : 'Not saved yet'}
+                </p>
+                <div className="adm-publish-actions">
+                  {isPublished ? (
+                    <>
+                      <button ref={primarySaveRef} className="btn btn-teal" name="intent" value="update" disabled={pending}>
+                        {pending ? 'Saving…' : 'Update'}
+                      </button>
+                      <button className="btn btn-plain" name="intent" value="unpublish" disabled={pending}>
+                        Unpublish
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button ref={primarySaveRef} className="btn btn-plain" name="intent" value="draft" disabled={pending}>
+                        Save draft
+                      </button>
+                      <button className="btn" name="intent" value="publish" disabled={pending}>
+                        {pending ? 'Saving…' : isFutureDate ? 'Schedule' : 'Publish'}
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               {e.id && deleteAction && (
                 <ConfirmButton

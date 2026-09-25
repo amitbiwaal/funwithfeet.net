@@ -69,8 +69,8 @@ export default async function CategoriesPage({ searchParams }: { searchParams: P
                       <Link href={`/admin/categories?edit=${c.id}`}>{c.name}</Link>
                       <span className="sub">/blog/category/{c.slug}</span>
                     </td>
-                    <td>{c.post_count} <span className="adm-hint">({c.live_count} live)</span></td>
-                    <td>
+                    <td data-label="Posts">{c.post_count} <span className="adm-hint">({c.live_count} live)</span></td>
+                    <td className="actions-cell">
                       <div className="adm-row-actions">
                         <Link className="btn btn-sm btn-plain" href={`/admin/categories?edit=${c.id}`}>Edit</Link>
                         <a className="btn btn-sm btn-plain" href={`/blog/category/${c.slug}`} target="_blank" rel="noopener">View</a>

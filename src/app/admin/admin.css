@@ -25,6 +25,15 @@
 .adm-side-foot a { color: #fff; font-weight: 700; }
 .adm-linkbtn { background: none; border: 0; padding: 0; color: var(--coral); font: inherit; font-weight: 800; cursor: pointer; text-align: left; }
 .adm-linkbtn:hover { text-decoration: underline; }
+/* Wraps the nav and footer so they can fold away on small screens; no box of its own on desktop. */
+.adm-menu { display: contents; }
+/* Menu button, small screens only */
+.adm-burger { display: none; position: relative; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 40px; padding: 0; border: 1px solid rgba(255,255,255,.22); border-radius: 10px; background: transparent; cursor: pointer; }
+.adm-burger .bar { display: block; height: 2.5px; width: 20px; margin: 0 auto; background: #fff; border-radius: 2px; transition: transform .2s, opacity .2s; }
+.adm-burger .dot { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 2px var(--ink); }
+.adm-side.is-open .adm-burger .bar:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.adm-side.is-open .adm-burger .bar:nth-child(2) { opacity: 0; }
+.adm-side.is-open .adm-burger .bar:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
 .adm-main { padding: 30px 34px 60px; min-width: 0; }
 .adm-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
@@ -72,7 +81,7 @@
 .adm-table tbody tr:hover { background: #fafdfc; }
 .adm-table .title-cell a { font-weight: 800; color: var(--ink); text-decoration: none; }
 .adm-table .title-cell a:hover { color: var(--teal); }
-.adm-table .sub { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px; word-break: break-all; }
+.adm-table .sub { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px; overflow-wrap: anywhere; }
 .adm-row-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .adm-row-actions form { margin: 0; }
 .adm-empty { padding: 36px 20px; text-align: center; color: var(--muted); }
@@ -129,13 +138,14 @@
 .adm-title-input { width: 100%; font: inherit; font-size: 1.7rem; font-weight: 900; padding: 12px 16px; border: 1.5px solid var(--line-strong); border-radius: var(--radius); background: #fff; color: var(--ink); }
 .adm-title-input:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
 .adm-slug { display: flex; align-items: center; gap: 0; border: 1.5px solid var(--line-strong); border-radius: 10px; background: #fff; font-size: .9rem; overflow: hidden; }
-.adm-slug span { padding: 8px 10px; background: var(--bg-soft); border-right: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.adm-slug > span { padding: 8px 10px; background: var(--bg-soft); border-right: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
 .adm-slug input { flex: 1; border: 0; padding: 8px 10px; font: inherit; min-width: 0; }
 .adm-slug input:focus { outline: none; }
 .adm-slug:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal-soft); }
 .adm-box { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .adm-box-head { padding: 11px 16px; border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; font-weight: 800; font-size: .76rem; text-transform: uppercase; letter-spacing: .1em; background: var(--bg-soft); display: flex; justify-content: space-between; align-items: center; }
 .adm-box-body { padding: 16px; display: grid; gap: 14px; }
+.adm-publish-bar { display: grid; gap: 14px; }
 .adm-publish-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .adm-publish-actions .btn { flex: 1 1 auto; }
 .adm-status-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .88rem; }
@@ -151,7 +161,7 @@
 
 /* Single-column grids: without an explicit minmax(0, 1fr) track, nowrap text
    (e.g. a long title in the Google preview) stretches the column past its box. */
-.adm-editor-main, .adm-editor-side, .adm-box-body, .adm-form, .adm-modal-body { grid-template-columns: minmax(0, 1fr); }
+.adm-editor-main, .adm-editor-side, .adm-box-body, .adm-form, .adm-modal-body, .adm-publish-bar { grid-template-columns: minmax(0, 1fr); }
 
 /* ---------- rich text editor (TipTap) ---------- */
 /* No overflow:hidden here — it would break the sticky toolbar. */
@@ -249,21 +259,64 @@ div.adm-stat:hover { transform: none; box-shadow: var(--shadow-sm); border-color
   .adm-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 960px) {
-  .adm-shell { grid-template-columns: 1fr; }
-  .adm-side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  /* The sidebar becomes a top bar; its links fold behind the menu button. */
+  .adm-shell { grid-template-columns: minmax(0, 1fr); }
+  .adm-side { position: static; height: auto; overflow: visible; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
   .adm-side .adm-brand { border-bottom: none; padding: 12px 16px; }
-  .adm-nav { display: flex; overflow-x: auto; padding: 0 8px 8px; width: 100%; order: 3; }
-  .adm-nav a { white-space: nowrap; padding: 8px 10px; }
-  .adm-nav a.active { box-shadow: inset 0 -3px 0 var(--coral); }
-  .adm-side-foot { margin: 0 0 0 auto; border-top: none; padding: 12px 16px; display: flex; gap: 14px; align-items: center; }
-  .adm-side-foot .who { display: none; }
+  .adm-burger { display: flex; margin-right: 16px; }
+  .adm-menu { display: none; width: 100%; border-top: 1px solid rgba(255,255,255,.1); }
+  .adm-side.is-open .adm-menu { display: block; }
+  .adm-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 10px; }
+  .adm-nav a { padding: 11px 12px; }
+  .adm-side-foot { margin: 0; padding: 12px 16px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+  .adm-side-foot .who { flex-basis: 100%; }
   .adm-main { padding: 22px 16px 50px; }
-  .adm-editor, .adm-grid-2, .adm-grid-side { grid-template-columns: 1fr; }
+  /* minmax(0, …): a plain 1fr track grows to fit wide content (tables, long titles) and overflows the screen. */
+  .adm-editor, .adm-grid-2, .adm-grid-side { grid-template-columns: minmax(0, 1fr); }
   .adm-editor-side { position: static; }
+  /* Save and Publish stay at the bottom of the screen instead of below the whole article. */
+  .adm-editor { padding-bottom: 80px; }
+  .adm-publish-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #fff; border-top: 1px solid var(--line); box-shadow: 0 -10px 24px -14px rgba(20, 32, 31, .3);
+  }
+  .adm-publish-bar .adm-savebar { flex: 1 1 auto; min-width: 0; }
+  .adm-publish-bar .adm-publish-actions { flex: 0 1 auto; flex-wrap: nowrap; }
+  .adm-publish-bar .btn { white-space: nowrap; }
 }
 @media (max-width: 640px) {
+  .adm-root h1 { font-size: 1.45rem; }
   .adm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .adm-stat { padding: 14px 16px; }
+  .adm-stat strong { font-size: 1.6rem; }
+  .adm-card { padding: 18px 16px; }
+  .adm-card-head { flex-wrap: wrap; align-items: flex-start; }
+  .adm-card-head .adm-hint { text-align: left; max-width: none; }
   .adm-title-input { font-size: 1.3rem; }
+  .adm-slug-host { display: none; }
   .rte-content { padding: 18px; }
-  .adm-search input { min-width: 0; }
+  .rte .ProseMirror th, .rte .ProseMirror td { padding: 8px 10px; }
+  .adm-toolbar .adm-search { flex: 1 1 100%; }
+  .adm-search input { min-width: 0; flex: 1; }
+  .adm-tabs a { padding: 8px 12px; }
+  .adm-root .btn-sm { padding: 8px 12px; }
+  /* Only "Unsaved changes" is worth the room next to the buttons. */
+  .adm-publish-bar .adm-savebar:not(.dirty) { display: none; }
+  .adm-publish-bar .adm-publish-actions { flex: 1 1 auto; }
+  .adm-modal-backdrop { padding: 12px; }
+  .adm-seg { width: auto; flex-wrap: wrap; }
+
+  /* Tables become one card per row: the title first, then the other cells, labelled from data-label. */
+  .adm-table-wrap { overflow-x: visible; }
+  .adm-table, .adm-table tbody, .adm-table td { display: block; }
+  .adm-table thead { display: none; }
+  .adm-table tr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .adm-table tbody tr:last-child { border-bottom: none; }
+  .adm-table tbody tr:hover { background: transparent; }
+  .adm-table td { padding: 0; border: 0; font-size: .88rem; }
+  .adm-table td.title-cell, .adm-table td.actions-cell, .adm-table td.checks-cell { flex: 1 0 100%; }
+  .adm-table td.title-cell { font-size: .95rem; }
+  .adm-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-weight: 700; }
 }

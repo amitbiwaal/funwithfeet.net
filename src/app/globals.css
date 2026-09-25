@@ -605,6 +605,9 @@ a.tag:hover { background: var(--amber); color: var(--ink); }
   .toc-mobile summary::-webkit-details-marker { display: none; }
   .toc-mobile summary::after { content: " +"; color: var(--coral); }
   .toc-mobile[open] summary::after { content: " –"; }
+  /* Bigger touch targets: the links sit close together. */
+  .toc-mobile ol { gap: 0; padding-top: 6px; padding-bottom: 6px; }
+  .toc-mobile a { padding: 7px 0; }
 }
 
 @media (max-width: 900px) {

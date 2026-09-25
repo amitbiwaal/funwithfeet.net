@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { logoutAction } from '@/app/admin/actions'
 import { LogoMark } from '@/components/site/LogoMark'
+import { cx } from '@/lib/utils'
 
 const ICONS: Record<string, ReactNode> = {
   dashboard: (<><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></>),
@@ -32,6 +33,8 @@ const LINKS = [
 
 export function AdminSidebar({ email, unread }: { email: string; unread: number }) {
   const pathname = usePathname() ?? ''
+  const [open, setOpen] = useState(false)
+  const close = () => setOpen(false)
 
   const isActive = (l: (typeof LINKS)[number]) => {
     if ('exact' in l && l.exact) return pathname === l.href
@@ -40,31 +43,53 @@ export function AdminSidebar({ email, unread }: { email: string; unread: number 
   }
 
   return (
-    <aside className="adm-side">
-      <Link className="adm-brand" href="/admin">
+    <aside className={cx('adm-side', open && 'is-open')}>
+      <Link className="adm-brand" href="/admin" onClick={close}>
         <LogoMark />
         <span>
           Fun With Feet
           <small>CMS</small>
         </span>
       </Link>
-      <nav className="adm-nav" aria-label="Admin">
-        {LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className={isActive(l) ? 'active' : undefined} aria-current={isActive(l) ? 'page' : undefined}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {ICONS[l.icon]}
-            </svg>
-            {l.label}
-            {l.icon === 'messages' && unread > 0 && <span className="count" aria-label={`${unread} unread`}>{unread}</span>}
-          </Link>
-        ))}
-      </nav>
-      <div className="adm-side-foot">
-        <span className="who" title={email}>{email}</span>
-        <a href="/" target="_blank" rel="noopener">View site ↗</a>
-        <form action={logoutAction}>
-          <button className="adm-linkbtn" type="submit">Sign out</button>
-        </form>
+      {/* Small screens: the links below fold behind this button. */}
+      <button
+        type="button"
+        className="adm-burger"
+        aria-label={open ? 'Close menu' : unread > 0 ? `Open menu (${unread} unread messages)` : 'Open menu'}
+        aria-expanded={open}
+        aria-controls="adm-menu"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="bar" />
+        <span className="bar" />
+        <span className="bar" />
+        {unread > 0 && !open && <span className="dot" />}
+      </button>
+      <div className="adm-menu" id="adm-menu">
+        <nav className="adm-nav" aria-label="Admin">
+          {LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={isActive(l) ? 'active' : undefined}
+              aria-current={isActive(l) ? 'page' : undefined}
+              onClick={close}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {ICONS[l.icon]}
+              </svg>
+              {l.label}
+              {l.icon === 'messages' && unread > 0 && <span className="count" aria-label={`${unread} unread`}>{unread}</span>}
+            </Link>
+          ))}
+        </nav>
+        <div className="adm-side-foot">
+          <span className="who" title={email}>{email}</span>
+          <a href="/" target="_blank" rel="noopener">View site ↗</a>
+          <form action={logoutAction}>
+            <button className="adm-linkbtn" type="submit">Sign out</button>
+          </form>
+        </div>
       </div>
     </aside>
   )

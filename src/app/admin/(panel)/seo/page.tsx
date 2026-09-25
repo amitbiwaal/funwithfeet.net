@@ -42,7 +42,7 @@ export default async function SeoAuditPage() {
                 {broken.map((b, i) => (
                   <tr key={i}>
                     <td className="title-cell"><Link href={b.editPath}>{b.sourceTitle}</Link></td>
-                    <td><code>{b.href}</code></td>
+                    <td data-label="Link"><code>{b.href}</code></td>
                     <td><span className="pill pill-scheduled">{b.reason}</span></td>
                   </tr>
                 ))}
@@ -86,11 +86,11 @@ function AuditTable({ rows, testId }: { rows: Awaited<ReturnType<typeof runSeoAu
                 <Link href={r.editPath}>{r.title}</Link>
                 <span className="sub">{r.path}{r.live ? '' : ' · not live'}</span>
               </td>
-              <td>{r.words}</td>
-              <td>{r.internalOut}</td>
-              <td>{r.live ? r.incoming : '—'}</td>
-              <td>{r.external}</td>
-              <td>
+              <td data-label="Words">{r.words}</td>
+              <td data-label="Links out">{r.internalOut}</td>
+              <td data-label="Linked from">{r.live ? r.incoming : '—'}</td>
+              <td data-label="External">{r.external}</td>
+              <td className="checks-cell">
                 {r.issues.length === 0 ? (
                   <span className="pill pill-published">All good</span>
                 ) : (

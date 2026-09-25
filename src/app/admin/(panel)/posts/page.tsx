@@ -80,12 +80,12 @@ export default async function PostsPage({ searchParams }: { searchParams: Promis
                     <Link href={`/admin/posts/${p.id}`}>{p.title}</Link>
                     <span className="sub">/blog/{p.slug}</span>
                   </td>
-                  <td>{p.category_name ?? '—'}</td>
+                  <td data-label="Category">{p.category_name ?? '—'}</td>
                   <td><StatusPill status={p.status} publishedAt={p.published_at} /></td>
                   <td>
                     {p.status === 'published' && p.published_at ? formatDateTime(p.published_at) : `Edited ${formatDateTime(p.updated_at)}`}
                   </td>
-                  <td>
+                  <td className="actions-cell">
                     <div className="adm-row-actions">
                       <Link className="btn btn-sm btn-plain" href={`/admin/posts/${p.id}`}>Edit</Link>
                       <a className="btn btn-sm btn-plain" href={`/blog/${p.slug}`} target="_blank" rel="noopener">

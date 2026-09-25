@@ -38,8 +38,8 @@ export default async function PagesListPage({ searchParams }: { searchParams: Pr
                     <span className="sub">/{p.slug}</span>
                   </td>
                   <td><span className={`pill pill-${p.status}`}>{p.status === 'published' ? 'Published' : 'Draft'}</span></td>
-                  <td>{formatDateTime(p.updated_at)}</td>
-                  <td>
+                  <td data-label="Updated">{formatDateTime(p.updated_at)}</td>
+                  <td className="actions-cell">
                     <div className="adm-row-actions">
                       <Link className="btn btn-sm btn-plain" href={`/admin/pages/${p.id}`}>Edit</Link>
                       <a className="btn btn-sm btn-plain" href={`/${p.slug}`} target="_blank" rel="noopener">View</a>

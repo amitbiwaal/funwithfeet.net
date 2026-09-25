@@ -53,7 +53,7 @@ export default async function DashboardPage() {
                     <tr key={p.id}>
                       <td className="title-cell"><Link href={`/admin/posts/${p.id}`}>{p.title}</Link></td>
                       <td><StatusPill status={p.status} publishedAt={p.published_at} /></td>
-                      <td>{formatDateTime(p.updated_at)}</td>
+                      <td data-label="Updated">{formatDateTime(p.updated_at)}</td>
                     </tr>
                   ))}
                 </tbody>
