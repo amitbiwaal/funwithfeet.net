@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { all, get, run } from './db'
 
 export type Message = {
   id: number
@@ -10,24 +10,22 @@ export type Message = {
   created_at: string
 }
 
-export function createMessage(input: { name: string; email: string; subject: string; message: string }) {
-  getDb()
-    .prepare('INSERT INTO messages (name, email, subject, message) VALUES (@name, @email, @subject, @message)')
-    .run(input)
+export async function createMessage(input: { name: string; email: string; subject: string; message: string }) {
+  await run('INSERT INTO messages (name, email, subject, message) VALUES (@name, @email, @subject, @message)', input)
 }
 
-export function listMessages(): Message[] {
-  return getDb().prepare('SELECT * FROM messages ORDER BY created_at DESC, id DESC').all() as Message[]
+export async function listMessages(): Promise<Message[]> {
+  return all<Message>('SELECT * FROM messages ORDER BY created_at DESC, id DESC')
 }
 
-export function unreadMessageCount(): number {
-  return (getDb().prepare('SELECT COUNT(*) AS c FROM messages WHERE is_read = 0').get() as { c: number }).c
+export async function unreadMessageCount(): Promise<number> {
+  return (await get<{ c: number }>('SELECT COUNT(*) AS c FROM messages WHERE is_read = 0'))?.c ?? 0
 }
 
-export function setMessageRead(id: number, read: boolean) {
-  getDb().prepare('UPDATE messages SET is_read = ? WHERE id = ?').run(read ? 1 : 0, id)
+export async function setMessageRead(id: number, read: boolean) {
+  await run('UPDATE messages SET is_read = ? WHERE id = ?', [read ? 1 : 0, id])
 }
 
-export function deleteMessage(id: number) {
-  getDb().prepare('DELETE FROM messages WHERE id = ?').run(id)
+export async function deleteMessage(id: number) {
+  await run('DELETE FROM messages WHERE id = ?', [id])
 }

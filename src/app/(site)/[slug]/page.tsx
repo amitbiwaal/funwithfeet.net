@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 type Props = { params: Promise<{ slug: string }> }
 
 async function loadPage(slug: string): Promise<Page | null> {
-  const page = getPageBySlug(slug)
+  const page = await getPageBySlug(slug)
   if (!page) return null
   if (page.status !== 'published' && !(await getCurrentUser())) return null
   return page

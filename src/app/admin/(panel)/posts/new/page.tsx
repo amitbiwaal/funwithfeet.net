@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'New post' }
 
 export default async function NewPostPage() {
   await requireAdmin()
-  const categories = listCategories().map((c) => ({ id: c.id, name: c.name }))
+  const categories = (await listCategories()).map((c) => ({ id: c.id, name: c.name }))
   return (
     <>
       <div className="adm-head">

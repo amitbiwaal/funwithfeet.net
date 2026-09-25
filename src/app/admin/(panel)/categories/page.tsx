@@ -17,7 +17,7 @@ const SAVED: Record<string, string> = {
 export default async function CategoriesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin()
   const sp = await searchParams
-  const categories = listCategories()
+  const categories = await listCategories()
   const editing = categories.find((c) => c.id === Number(param(sp.edit)))
 
   return (

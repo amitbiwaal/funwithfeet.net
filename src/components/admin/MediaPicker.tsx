@@ -118,7 +118,7 @@ export function MediaPicker({
       {tab === 'upload' && (
         <label className="adm-drop">
           <strong>{busy ? 'Uploading…' : 'Choose an image to upload'}</strong>
-          <p>JPG, PNG, WebP, GIF or AVIF · up to 5 MB</p>
+          <p>JPG, PNG, WebP, GIF or AVIF · up to 4 MB</p>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif,image/avif"

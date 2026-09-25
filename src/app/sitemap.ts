@@ -19,9 +19,10 @@ function postImages(cover: string, html: string): string[] {
   return Array.from(new Set([cover, ...inline].filter(Boolean).map((src) => absoluteUrl(src)))).slice(0, 20)
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticDate = new Date(SITE.staticPagesUpdated)
-  const posts = listAllLiveForSitemap().filter((p) => !p.noindex)
+  const [allPosts, categories, pages] = await Promise.all([listAllLiveForSitemap(), listCategories(), listPublishedPages()])
+  const posts = allPosts.filter((p) => !p.noindex)
   const newestPost = posts[0] ? new Date(posts[0].updated_at) : staticDate
 
   const entries: MetadataRoute.Sitemap = [
@@ -42,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       images: postImages(p.cover_image, p.content),
     })
   }
-  for (const c of listCategories().filter((c) => c.live_count > 0)) {
+  for (const c of categories.filter((c) => c.live_count > 0)) {
     entries.push({
       url: absoluteUrl(`/blog/category/${c.slug}`),
       lastModified: c.last_updated ? new Date(c.last_updated) : undefined,
@@ -50,7 +51,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     })
   }
-  for (const pg of listPublishedPages().filter((pg) => !pg.noindex)) {
+  for (const pg of pages.filter((pg) => !pg.noindex)) {
     entries.push({ url: absoluteUrl(`/${pg.slug}`), lastModified: new Date(pg.updated_at), changeFrequency: 'yearly', priority: 0.3 })
   }
   return entries

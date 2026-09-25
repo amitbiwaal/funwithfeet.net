@@ -39,6 +39,6 @@ export async function sendContactMessage(_prev: ContactState, formData: FormData
   }
   recent.set(ip, [...times, now])
 
-  createMessage({ name, email, subject, message })
+  await createMessage({ name, email, subject, message })
   return { ok: true }
 }

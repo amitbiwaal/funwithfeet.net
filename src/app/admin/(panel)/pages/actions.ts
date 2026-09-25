@@ -13,7 +13,7 @@ export async function savePageAction(fd: FormData): Promise<SaveResult | undefin
 
   const id = Number(fd.get('id')) || null
   const intent = String(fd.get('intent') ?? 'draft')
-  const existing = id ? getPageById(id) : undefined
+  const existing = id ? await getPageById(id) : undefined
   if (id && !existing) return { ok: false, error: 'This page no longer exists.' }
 
   const title = str(fd, 'title', 200)
@@ -25,7 +25,7 @@ export async function savePageAction(fd: FormData): Promise<SaveResult | undefin
 
   const input: PageInput = {
     title,
-    slug: uniquePageSlug(str(fd, 'slug', 120) || title, id ?? undefined),
+    slug: await uniquePageSlug(str(fd, 'slug', 120) || title, id ?? undefined),
     content: sanitizeContent(String(fd.get('content') ?? '')),
     status,
     meta_title: str(fd, 'meta_title', 120),
@@ -34,14 +34,14 @@ export async function savePageAction(fd: FormData): Promise<SaveResult | undefin
   }
 
   if (!id) {
-    const newId = createPage(input)
+    const newId = await createPage(input)
     revalidatePath('/', 'layout')
     redirect(`/admin/pages/${newId}?created=${status}`)
   }
 
-  updatePage(id, input)
+  await updatePage(id, input)
   revalidatePath('/', 'layout')
-  const entry = pageToEntry(getPageById(id)!)
+  const entry = pageToEntry((await getPageById(id))!)
   const message =
     intent === 'publish' ? 'Page published.' : intent === 'unpublish' ? 'Page unpublished — it is now a draft.' : intent === 'draft' ? 'Draft saved.' : 'Page updated.'
   return { ok: true, message, entry }
@@ -50,7 +50,7 @@ export async function savePageAction(fd: FormData): Promise<SaveResult | undefin
 export async function deletePageAction(fd: FormData) {
   await requireAdmin()
   const id = Number(fd.get('id'))
-  if (id) deletePage(id)
+  if (id) await deletePage(id)
   revalidatePath('/', 'layout')
   redirect('/admin/pages?deleted=1')
 }

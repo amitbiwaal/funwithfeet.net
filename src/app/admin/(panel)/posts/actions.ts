@@ -20,7 +20,7 @@ export async function savePostAction(fd: FormData): Promise<SaveResult | undefin
     ? String(fd.get('intent'))
     : 'draft') as Intent
 
-  const existing = id ? getPostById(id) : undefined
+  const existing = id ? await getPostById(id) : undefined
   if (id && !existing) return { ok: false, error: 'This post no longer exists.' }
 
   const title = str(fd, 'title', 200)
@@ -40,11 +40,11 @@ export async function savePostAction(fd: FormData): Promise<SaveResult | undefin
   if (status === 'published' && !publishedAt) publishedAt = nowIso()
 
   const rawCategory = Number(fd.get('category_id')) || null
-  const categoryId = rawCategory && getCategoryById(rawCategory) ? rawCategory : null
+  const categoryId = rawCategory && (await getCategoryById(rawCategory)) ? rawCategory : null
 
   const input: PostInput = {
     title,
-    slug: uniquePostSlug(str(fd, 'slug', 120) || title, id ?? undefined),
+    slug: await uniquePostSlug(str(fd, 'slug', 120) || title, id ?? undefined),
     excerpt: str(fd, 'excerpt', 400),
     content,
     cover_image: cleanImageUrl(str(fd, 'cover_image', 500)),
@@ -61,16 +61,16 @@ export async function savePostAction(fd: FormData): Promise<SaveResult | undefin
   }
 
   if (!id) {
-    const newId = createPost(input)
+    const newId = await createPost(input)
     revalidatePath('/', 'layout')
     const created = status === 'draft' ? 'draft' : isLive(input) ? 'published' : 'scheduled'
     redirect(`/admin/posts/${newId}?created=${created}`)
   }
 
-  updatePost(id, input)
+  await updatePost(id, input)
   revalidatePath('/', 'layout')
 
-  const fresh = getPostById(id)!
+  const fresh = (await getPostById(id))!
   const entry = postToEntry(fresh)
   let message = 'Post updated.'
   if (intent === 'draft') message = 'Draft saved.'
@@ -83,7 +83,7 @@ export async function savePostAction(fd: FormData): Promise<SaveResult | undefin
 export async function deletePostAction(fd: FormData) {
   await requireAdmin()
   const id = Number(fd.get('id'))
-  if (id) deletePost(id)
+  if (id) await deletePost(id)
   revalidatePath('/', 'layout')
   redirect('/admin/posts?deleted=1')
 }

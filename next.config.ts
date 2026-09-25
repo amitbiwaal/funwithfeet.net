@@ -11,8 +11,6 @@ const nextConfig: NextConfig = {
   // E2E runs build into their own folder so they never touch a running `next dev`.
   distDir: process.env.NEXT_DIST_DIR || '.next',
   poweredByHeader: false,
-  // Native SQLite driver must stay a runtime require, never bundled.
-  serverExternalPackages: ['better-sqlite3'],
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',

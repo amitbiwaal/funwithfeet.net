@@ -35,6 +35,8 @@ export default defineConfig({
     env: {
       NEXT_DIST_DIR: '.next-e2e',
       DATA_DIR: 'e2e/.data',
+      // Overrides any TURSO_DATABASE_URL in .env.local, so tests never touch the live database.
+      TURSO_DATABASE_URL: 'file:e2e/.data/cms.db',
       ADMIN_EMAIL: E2E_ADMIN.email,
       ADMIN_PASSWORD: E2E_ADMIN.password,
       SEED_DEMO_CONTENT: 'true',

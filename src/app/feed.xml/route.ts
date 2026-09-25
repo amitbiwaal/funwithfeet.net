@@ -7,8 +7,8 @@ function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-export function GET() {
-  const { posts } = listLivePosts({ limit: 30 })
+export async function GET() {
+  const { posts } = await listLivePosts({ limit: 30 })
   const items = posts
     .map((p) => {
       const url = absoluteUrl(`/blog/${p.slug}`)

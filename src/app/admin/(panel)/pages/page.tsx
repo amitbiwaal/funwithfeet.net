@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Pages' }
 export default async function PagesListPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin()
   const sp = await searchParams
-  const pages = listPages()
+  const pages = await listPages()
 
   return (
     <>

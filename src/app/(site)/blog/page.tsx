@@ -36,8 +36,8 @@ export default async function BlogIndexPage({ searchParams }: Props) {
   const q = firstParam(sp.q).slice(0, 80)
   const page = parsePage(sp.page)
 
-  const featured = q ? undefined : getFeaturedPost()
-  const { posts, total } = listLivePosts({
+  const featured = q ? undefined : await getFeaturedPost()
+  const { posts, total } = await listLivePosts({
     limit: PER_PAGE,
     offset: (page - 1) * PER_PAGE,
     q: q || undefined,

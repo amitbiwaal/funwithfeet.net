@@ -49,14 +49,13 @@ export function internalPath(href: string): string | null {
  * Link and content-quality audit of every post and CMS page: internal links in and out,
  * orphans, broken internal links, thin content and missing SEO fields.
  */
-export function runSeoAudit() {
-  const posts = listPostsForAdmin('all')
-  const pages = listPages()
+export async function runSeoAudit() {
+  const [posts, pages, categories] = await Promise.all([listPostsForAdmin('all'), listPages(), listCategories()])
 
   const valid = new Set<string>([...LANDING_PAGES.map((l) => l.path), ...OTHER_VALID])
   for (const p of posts) if (isLive(p)) valid.add(`/blog/${p.slug}`)
   for (const p of pages) if (p.status === 'published') valid.add(`/${p.slug}`)
-  for (const c of listCategories()) valid.add(`/blog/category/${c.slug}`)
+  for (const c of categories) valid.add(`/blog/category/${c.slug}`)
 
   type Source = { kind: 'post' | 'page'; id: number; title: string; path: string; editPath: string; live: boolean; html: string }
   const sources: Source[] = [

@@ -11,9 +11,8 @@ export const metadata: Metadata = { title: 'Dashboard' }
 
 export default async function DashboardPage() {
   const user = await requireAdmin()
-  const counts = postCounts()
-  const recent = listPostsForAdmin('all').slice(0, 6)
-  const messages = listMessages()
+  const [counts, posts, messages, mediaCount] = await Promise.all([postCounts(), listPostsForAdmin('all'), listMessages(), countMedia()])
+  const recent = posts.slice(0, 6)
   const unread = messages.filter((m) => !m.is_read).length
 
   return (
@@ -34,7 +33,7 @@ export default async function DashboardPage() {
         <Link className="adm-stat" href="/admin/posts?status=draft"><strong>{counts.drafts ?? 0}</strong><span>Drafts</span></Link>
         <Link className="adm-stat" href="/admin/posts?status=scheduled"><strong>{counts.scheduled ?? 0}</strong><span>Scheduled</span></Link>
         <Link className="adm-stat" href="/admin/messages"><strong>{unread}</strong><span>Unread messages</span></Link>
-        <Link className="adm-stat" href="/admin/media"><strong>{countMedia()}</strong><span>Media files</span></Link>
+        <Link className="adm-stat" href="/admin/media"><strong>{mediaCount}</strong><span>Media files</span></Link>
       </div>
 
       <div className="adm-grid-2">

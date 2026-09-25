@@ -81,8 +81,8 @@ const organizationLd = {
     'Fun With Feet is a dedicated feet pics marketplace where creators sell feet pics safely and connect with buyers searching for foot content.',
 }
 
-export default function HomePage() {
-  const { posts: latest } = listLivePosts({ limit: 3 })
+export default async function HomePage() {
+  const { posts: latest } = await listLivePosts({ limit: 3 })
 
   return (
     <main id="top">

@@ -46,7 +46,7 @@ export function MediaUploader() {
         }}
       >
         <strong>Drop images here or click to upload</strong>
-        <p>JPG, PNG, WebP, GIF or AVIF · up to 5 MB each</p>
+        <p>JPG, PNG, WebP, GIF or AVIF · up to 4 MB each</p>
         <input
           type="file"
           multiple

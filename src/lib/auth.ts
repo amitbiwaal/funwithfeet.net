@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { cache } from 'react'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getDb } from './db'
+import { batch, get, run, stmt } from './db'
 import { verifyPassword } from './password'
 
 export const SESSION_COOKIE = 'fwf_session'
@@ -20,15 +20,12 @@ function cookieSecure(): boolean {
 }
 
 export async function createSession(userId: number) {
-  const db = getDb()
   const token = crypto.randomBytes(32).toString('base64url')
   const expires = new Date(Date.now() + SESSION_DAYS * 86_400_000)
-  db.prepare(`DELETE FROM sessions WHERE expires_at < ?`).run(new Date().toISOString())
-  db.prepare('INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)').run(
-    hashToken(token),
-    userId,
-    expires.toISOString(),
-  )
+  await batch([
+    stmt(`DELETE FROM sessions WHERE expires_at < ?`, [new Date().toISOString()]),
+    stmt('INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)', [hashToken(token), userId, expires.toISOString()]),
+  ])
   const jar = await cookies()
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -42,7 +39,7 @@ export async function createSession(userId: number) {
 export async function destroySession() {
   const jar = await cookies()
   const token = jar.get(SESSION_COOKIE)?.value
-  if (token) getDb().prepare('DELETE FROM sessions WHERE id = ?').run(hashToken(token))
+  if (token) await run('DELETE FROM sessions WHERE id = ?', [hashToken(token)])
   jar.delete(SESSION_COOKIE)
 }
 
@@ -50,13 +47,12 @@ export async function destroySession() {
 export const getCurrentUser = cache(async (): Promise<AdminUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value
   if (!token) return null
-  const row = getDb()
-    .prepare(
-      `SELECT u.id, u.email, u.name, s.expires_at
-         FROM sessions s JOIN users u ON u.id = s.user_id
-        WHERE s.id = ?`,
-    )
-    .get(hashToken(token)) as (AdminUser & { expires_at: string }) | undefined
+  const row = await get<AdminUser & { expires_at: string }>(
+    `SELECT u.id, u.email, u.name, s.expires_at
+       FROM sessions s JOIN users u ON u.id = s.user_id
+      WHERE s.id = ?`,
+    [hashToken(token)],
+  )
   if (!row || row.expires_at < new Date().toISOString()) return null
   return { id: row.id, email: row.email, name: row.name }
 })
@@ -89,9 +85,7 @@ export async function attemptLogin(emailRaw: string, password: string): Promise<
     return { ok: false, error: 'Too many sign-in attempts. Please wait 15 minutes and try again.' }
   }
 
-  const user = getDb()
-    .prepare('SELECT id, password_hash FROM users WHERE email = ?')
-    .get(email) as { id: number; password_hash: string } | undefined
+  const user = await get<{ id: number; password_hash: string }>('SELECT id, password_hash FROM users WHERE email = ?', [email])
 
   if (!user || !verifyPassword(password, user.password_hash)) {
     if (!entry || now - entry.first >= WINDOW_MS) attempts.set(key, { count: 1, first: now })

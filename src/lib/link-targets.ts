@@ -15,9 +15,10 @@ export const LANDING_PAGES: LinkTarget[] = [
 ]
 
 /** Every public URL an editor can link to: landing pages, live posts, published pages, categories. */
-export function listLinkTargets(): LinkTarget[] {
-  const posts = listLivePosts({ limit: 1000 }).posts.map<LinkTarget>((p) => ({ title: p.title, path: `/blog/${p.slug}`, type: 'Post' }))
-  const pages = listPublishedPages().map<LinkTarget>((p) => ({ title: p.title, path: `/${p.slug}`, type: 'Page' }))
-  const categories = listCategories().map<LinkTarget>((c) => ({ title: `${c.name} (category)`, path: `/blog/category/${c.slug}`, type: 'Category' }))
+export async function listLinkTargets(): Promise<LinkTarget[]> {
+  const [live, published, cats] = await Promise.all([listLivePosts({ limit: 1000 }), listPublishedPages(), listCategories()])
+  const posts = live.posts.map<LinkTarget>((p) => ({ title: p.title, path: `/blog/${p.slug}`, type: 'Post' }))
+  const pages = published.map<LinkTarget>((p) => ({ title: p.title, path: `/${p.slug}`, type: 'Page' }))
+  const categories = cats.map<LinkTarget>((c) => ({ title: `${c.name} (category)`, path: `/blog/category/${c.slug}`, type: 'Category' }))
   return [...LANDING_PAGES, ...posts, ...pages, ...categories]
 }

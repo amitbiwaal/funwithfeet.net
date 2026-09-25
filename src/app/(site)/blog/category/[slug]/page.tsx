@@ -21,7 +21,7 @@ type Props = {
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params
   const page = parsePage((await searchParams).page)
-  const category = getCategoryBySlug(slug)
+  const category = await getCategoryBySlug(slug)
   if (!category) return { title: 'Category not found', robots: { index: false } }
   const path = `/blog/category/${category.slug}${page > 1 ? `?page=${page}` : ''}`
   return buildMetadata({
@@ -34,10 +34,10 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { slug } = await params
   const page = parsePage((await searchParams).page)
-  const category = getCategoryBySlug(slug)
+  const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 
-  const { posts, total } = listLivePosts({ categoryId: category.id, limit: PER_PAGE, offset: (page - 1) * PER_PAGE })
+  const { posts, total } = await listLivePosts({ categoryId: category.id, limit: PER_PAGE, offset: (page - 1) * PER_PAGE })
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
 
   const collectionLd = {

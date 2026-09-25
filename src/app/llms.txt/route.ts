@@ -4,8 +4,8 @@ import { absoluteUrl, SITE } from '@/lib/site'
 export const dynamic = 'force-dynamic'
 
 /** llms.txt for AI search engines — the original static file, plus the latest blog articles. */
-export function GET() {
-  const { posts } = listLivePosts({ limit: 25 })
+export async function GET() {
+  const { posts } = await listLivePosts({ limit: 25 })
   const articles = posts.map((p) => `- ${p.title}: ${absoluteUrl(`/blog/${p.slug}`)} — ${postSummary(p, 160)}`).join('\n')
 
   const body = `# FunWithFeet.net — Sell Feet Pics Safely with Fun With Feet

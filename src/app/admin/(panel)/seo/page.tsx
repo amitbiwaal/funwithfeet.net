@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'SEO & Links' }
 
 export default async function SeoAuditPage() {
   await requireAdmin()
-  const { rows, broken, summary } = runSeoAudit()
+  const { rows, broken, summary } = await runSeoAudit()
   const posts = rows.filter((r) => r.kind === 'post')
   const pages = rows.filter((r) => r.kind === 'page')
 
@@ -71,7 +71,7 @@ export default async function SeoAuditPage() {
   )
 }
 
-function AuditTable({ rows, testId }: { rows: ReturnType<typeof runSeoAudit>['rows']; testId: string }) {
+function AuditTable({ rows, testId }: { rows: Awaited<ReturnType<typeof runSeoAudit>>['rows']; testId: string }) {
   if (rows.length === 0) return <p className="adm-empty">Nothing here yet.</p>
   return (
     <div className="adm-table-wrap">

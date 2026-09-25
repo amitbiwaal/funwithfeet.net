@@ -18,7 +18,7 @@ type Props = {
 export default async function EditPagePage({ params, searchParams }: Props) {
   await requireAdmin()
   const { id } = await params
-  const page = getPageById(Number(id))
+  const page = await getPageById(Number(id))
   if (!page) notFound()
   const created = param((await searchParams).created)
 

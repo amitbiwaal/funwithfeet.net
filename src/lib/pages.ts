@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { all, get, run } from './db'
 import { RESERVED_SLUGS } from './site'
 import { nowIso, slugify } from './utils'
 
@@ -25,53 +25,50 @@ export type PageInput = {
   noindex: boolean
 }
 
-export function listPages(): Page[] {
-  return getDb().prepare('SELECT * FROM pages ORDER BY title').all() as Page[]
+export async function listPages(): Promise<Page[]> {
+  return all<Page>('SELECT * FROM pages ORDER BY title')
 }
 
-export function listPublishedPages(): Page[] {
-  return getDb().prepare(`SELECT * FROM pages WHERE status = 'published' ORDER BY title`).all() as Page[]
+export async function listPublishedPages(): Promise<Page[]> {
+  return all<Page>(`SELECT * FROM pages WHERE status = 'published' ORDER BY title`)
 }
 
-export function getPageBySlug(slug: string): Page | undefined {
-  return getDb().prepare('SELECT * FROM pages WHERE slug = ?').get(slug) as Page | undefined
+export async function getPageBySlug(slug: string): Promise<Page | undefined> {
+  return get<Page>('SELECT * FROM pages WHERE slug = ?', [slug])
 }
 
-export function getPageById(id: number): Page | undefined {
-  return getDb().prepare('SELECT * FROM pages WHERE id = ?').get(id) as Page | undefined
+export async function getPageById(id: number): Promise<Page | undefined> {
+  return get<Page>('SELECT * FROM pages WHERE id = ?', [id])
 }
 
-export function uniquePageSlug(wanted: string, excludeId?: number): string {
+export async function uniquePageSlug(wanted: string, excludeId?: number): Promise<string> {
   const base = slugify(wanted) || 'page'
-  const exists = getDb().prepare('SELECT id FROM pages WHERE slug = ? AND id != ?')
   let slug = RESERVED_SLUGS.has(base) ? `${base}-page` : base
   const root = slug
   let n = 2
-  while (exists.get(slug, excludeId ?? -1)) slug = `${root}-${n++}`
+  while (await get('SELECT id FROM pages WHERE slug = ? AND id != ?', [slug, excludeId ?? -1])) slug = `${root}-${n++}`
   return slug
 }
 
-export function createPage(input: PageInput): number {
-  const res = getDb()
-    .prepare(
-      `INSERT INTO pages (title, slug, content, status, meta_title, meta_description, noindex)
-       VALUES (@title, @slug, @content, @status, @meta_title, @meta_description, @noindex)`,
-    )
-    .run({ ...input, noindex: input.noindex ? 1 : 0 })
-  return Number(res.lastInsertRowid)
+export async function createPage(input: PageInput): Promise<number> {
+  const res = await run(
+    `INSERT INTO pages (title, slug, content, status, meta_title, meta_description, noindex)
+     VALUES (@title, @slug, @content, @status, @meta_title, @meta_description, @noindex)`,
+    { ...input, noindex: input.noindex ? 1 : 0 },
+  )
+  return res.lastInsertRowid
 }
 
-export function updatePage(id: number, input: PageInput) {
-  getDb()
-    .prepare(
-      `UPDATE pages SET title = @title, slug = @slug, content = @content, status = @status,
-              meta_title = @meta_title, meta_description = @meta_description, noindex = @noindex,
-              updated_at = @updated_at
-        WHERE id = @id`,
-    )
-    .run({ ...input, noindex: input.noindex ? 1 : 0, id, updated_at: nowIso() })
+export async function updatePage(id: number, input: PageInput) {
+  await run(
+    `UPDATE pages SET title = @title, slug = @slug, content = @content, status = @status,
+            meta_title = @meta_title, meta_description = @meta_description, noindex = @noindex,
+            updated_at = @updated_at
+      WHERE id = @id`,
+    { ...input, noindex: input.noindex ? 1 : 0, id, updated_at: nowIso() },
+  )
 }
 
-export function deletePage(id: number) {
-  getDb().prepare('DELETE FROM pages WHERE id = ?').run(id)
+export async function deletePage(id: number) {
+  await run('DELETE FROM pages WHERE id = ?', [id])
 }

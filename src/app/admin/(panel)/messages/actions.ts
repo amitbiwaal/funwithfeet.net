@@ -7,13 +7,13 @@ import { deleteMessage, setMessageRead } from '@/lib/messages'
 export async function toggleReadAction(fd: FormData) {
   await requireAdmin()
   const id = Number(fd.get('id'))
-  if (id) setMessageRead(id, fd.get('read') === '1')
+  if (id) await setMessageRead(id, fd.get('read') === '1')
   revalidatePath('/admin', 'layout')
 }
 
 export async function deleteMessageAction(fd: FormData) {
   await requireAdmin()
   const id = Number(fd.get('id'))
-  if (id) deleteMessage(id)
+  if (id) await deleteMessage(id)
   revalidatePath('/admin', 'layout')
 }

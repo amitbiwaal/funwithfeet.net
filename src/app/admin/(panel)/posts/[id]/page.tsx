@@ -25,10 +25,10 @@ type Props = {
 export default async function EditPostPage({ params, searchParams }: Props) {
   await requireAdmin()
   const { id } = await params
-  const post = getPostById(Number(id))
+  const post = await getPostById(Number(id))
   if (!post) notFound()
   const created = param((await searchParams).created)
-  const categories = listCategories().map((c) => ({ id: c.id, name: c.name }))
+  const categories = (await listCategories()).map((c) => ({ id: c.id, name: c.name }))
 
   return (
     <>

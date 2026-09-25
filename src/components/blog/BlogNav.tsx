@@ -4,8 +4,8 @@ import { CtaButton } from '@/components/site/ui'
 import { cx } from '@/lib/utils'
 
 /** Category filter chips shown on the blog index and category pages. */
-export function CategoryChips({ active }: { active?: string }) {
-  const categories = listCategories().filter((c) => c.live_count > 0)
+export async function CategoryChips({ active }: { active?: string }) {
+  const categories = (await listCategories()).filter((c) => c.live_count > 0)
   if (categories.length === 0) return null
   return (
     <nav className="chips" aria-label="Blog categories">
@@ -27,8 +27,8 @@ export function CategoryChips({ active }: { active?: string }) {
 }
 
 /** Right-hand column on the blog index and category pages. */
-export function BlogSidebar({ active }: { active?: string }) {
-  const categories = listCategories().filter((c) => c.live_count > 0)
+export async function BlogSidebar({ active }: { active?: string }) {
+  const categories = (await listCategories()).filter((c) => c.live_count > 0)
   return (
     <aside className="blog-sidebar" aria-label="Blog sidebar">
       {categories.length > 0 && (

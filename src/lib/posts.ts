@@ -1,4 +1,4 @@
-import { getDb } from './db'
+import { all, get, run } from './db'
 import { nowIso, slugify, stripHtml, truncate } from './utils'
 
 export type PostStatus = 'draft' | 'published'
@@ -56,7 +56,7 @@ export function isLive(post: Pick<Post, 'status' | 'published_at'>): boolean {
   return post.status === 'published' && !!post.published_at && post.published_at <= nowIso()
 }
 
-export function listLivePosts(opts: { limit?: number; offset?: number; categoryId?: number; q?: string; excludeId?: number } = {}) {
+export async function listLivePosts(opts: { limit?: number; offset?: number; categoryId?: number; q?: string; excludeId?: number } = {}) {
   const where = [LIVE]
   const params: Record<string, unknown> = { now: nowIso(), limit: opts.limit ?? 12, offset: opts.offset ?? 0 }
   if (opts.categoryId) {
@@ -71,53 +71,49 @@ export function listLivePosts(opts: { limit?: number; offset?: number; categoryI
     where.push(`(p.title LIKE @q ESCAPE '\\' OR p.excerpt LIKE @q ESCAPE '\\' OR p.content LIKE @q ESCAPE '\\' OR p.tags LIKE @q ESCAPE '\\')`)
     params.q = `%${opts.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%`
   }
-  const db = getDb()
   const whereSql = where.join(' AND ')
-  const posts = db
-    .prepare(`${SELECT} WHERE ${whereSql} ORDER BY p.published_at DESC LIMIT @limit OFFSET @offset`)
-    .all(params) as Post[]
-  const { total } = db.prepare(`SELECT COUNT(*) AS total FROM posts p WHERE ${whereSql}`).get(params) as { total: number }
-  return { posts, total }
+  const [posts, count] = await Promise.all([
+    all<Post>(`${SELECT} WHERE ${whereSql} ORDER BY p.published_at DESC LIMIT @limit OFFSET @offset`, params),
+    get<{ total: number }>(`SELECT COUNT(*) AS total FROM posts p WHERE ${whereSql}`, params),
+  ])
+  return { posts, total: count?.total ?? 0 }
 }
 
-export function getFeaturedPost(): Post | undefined {
-  return getDb()
-    .prepare(`${SELECT} WHERE ${LIVE} AND p.featured = 1 ORDER BY p.published_at DESC LIMIT 1`)
-    .get({ now: nowIso() }) as Post | undefined
+export async function getFeaturedPost(): Promise<Post | undefined> {
+  return get<Post>(`${SELECT} WHERE ${LIVE} AND p.featured = 1 ORDER BY p.published_at DESC LIMIT 1`, { now: nowIso() })
 }
 
-export function getPostBySlug(slug: string): Post | undefined {
-  return getDb().prepare(`${SELECT} WHERE p.slug = ?`).get(slug) as Post | undefined
+export async function getPostBySlug(slug: string): Promise<Post | undefined> {
+  return get<Post>(`${SELECT} WHERE p.slug = ?`, [slug])
 }
 
-export function getPostById(id: number): Post | undefined {
-  return getDb().prepare(`${SELECT} WHERE p.id = ?`).get(id) as Post | undefined
+export async function getPostById(id: number): Promise<Post | undefined> {
+  return get<Post>(`${SELECT} WHERE p.id = ?`, [id])
 }
 
-export function getRelatedPosts(post: Post, limit = 3): Post[] {
+export async function getRelatedPosts(post: Post, limit = 3): Promise<Post[]> {
   const now = nowIso()
-  const db = getDb()
   const sameCategory = post.category_id
-    ? (db
-        .prepare(`${SELECT} WHERE ${LIVE} AND p.category_id = @cat AND p.id != @id ORDER BY p.published_at DESC LIMIT @limit`)
-        .all({ now, cat: post.category_id, id: post.id, limit }) as Post[])
+    ? await all<Post>(
+        `${SELECT} WHERE ${LIVE} AND p.category_id = @cat AND p.id != @id ORDER BY p.published_at DESC LIMIT @limit`,
+        { now, cat: post.category_id, id: post.id, limit },
+      )
     : []
   if (sameCategory.length >= limit) return sameCategory
   const exclude = [post.id, ...sameCategory.map((p) => p.id)]
   const params: Record<string, unknown> = { now, limit: limit - sameCategory.length }
   exclude.forEach((id, i) => (params[`x${i}`] = id))
-  const others = db
-    .prepare(
-      `${SELECT} WHERE ${LIVE} AND p.id NOT IN (${exclude.map((_, i) => `@x${i}`).join(',')})
-       ORDER BY p.published_at DESC LIMIT @limit`,
-    )
-    .all(params) as Post[]
+  const others = await all<Post>(
+    `${SELECT} WHERE ${LIVE} AND p.id NOT IN (${exclude.map((_, i) => `@x${i}`).join(',')})
+     ORDER BY p.published_at DESC LIMIT @limit`,
+    params,
+  )
   return [...sameCategory, ...others]
 }
 
 export type AdminPostFilter = 'all' | 'published' | 'draft' | 'scheduled'
 
-export function listPostsForAdmin(filter: AdminPostFilter = 'all', q = ''): Post[] {
+export async function listPostsForAdmin(filter: AdminPostFilter = 'all', q = ''): Promise<Post[]> {
   const where: string[] = []
   const params: Record<string, unknown> = { now: nowIso() }
   if (filter === 'published') where.push(LIVE)
@@ -127,32 +123,30 @@ export function listPostsForAdmin(filter: AdminPostFilter = 'all', q = ''): Post
     where.push(`(p.title LIKE @q OR p.slug LIKE @q)`)
     params.q = `%${q}%`
   }
-  return getDb()
-    .prepare(`${SELECT} ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY p.updated_at DESC`)
-    .all(params) as Post[]
+  return all<Post>(`${SELECT} ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY p.updated_at DESC`, params)
 }
 
-export function postCounts() {
-  const now = nowIso()
-  return getDb()
-    .prepare(
-      `SELECT
-         COUNT(*) AS total,
-         SUM(CASE WHEN status = 'published' AND published_at <= @now THEN 1 ELSE 0 END) AS published,
-         SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS drafts,
-         SUM(CASE WHEN status = 'published' AND published_at > @now THEN 1 ELSE 0 END) AS scheduled
-       FROM posts`,
-    )
-    .get({ now }) as { total: number; published: number | null; drafts: number | null; scheduled: number | null }
+type PostCounts = { total: number; published: number | null; drafts: number | null; scheduled: number | null }
+
+export async function postCounts(): Promise<PostCounts> {
+  const row = await get<PostCounts>(
+    `SELECT
+       COUNT(*) AS total,
+       SUM(CASE WHEN status = 'published' AND published_at <= @now THEN 1 ELSE 0 END) AS published,
+       SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS drafts,
+       SUM(CASE WHEN status = 'published' AND published_at > @now THEN 1 ELSE 0 END) AS scheduled
+     FROM posts`,
+    { now: nowIso() },
+  )
+  return row ?? { total: 0, published: null, drafts: null, scheduled: null }
 }
 
 /** A slug that is not used by any other post. */
-export function uniquePostSlug(wanted: string, excludeId?: number): string {
+export async function uniquePostSlug(wanted: string, excludeId?: number): Promise<string> {
   const base = slugify(wanted) || 'post'
-  const exists = getDb().prepare('SELECT id FROM posts WHERE slug = ? AND id != ?')
   let slug = base
   let n = 2
-  while (exists.get(slug, excludeId ?? -1)) slug = `${base}-${n++}`
+  while (await get('SELECT id FROM posts WHERE slug = ? AND id != ?', [slug, excludeId ?? -1])) slug = `${base}-${n++}`
   return slug
 }
 
@@ -164,48 +158,45 @@ function toRow(input: PostInput) {
   }
 }
 
-export function createPost(input: PostInput): number {
-  const res = getDb()
-    .prepare(
-      `INSERT INTO posts (title, slug, excerpt, content, cover_image, cover_alt, category_id, tags, status, featured,
-                          meta_title, meta_description, noindex, author_name, published_at)
-       VALUES (@title, @slug, @excerpt, @content, @cover_image, @cover_alt, @category_id, @tags, @status, @featured,
-               @meta_title, @meta_description, @noindex, @author_name, @published_at)`,
-    )
-    .run(toRow(input))
-  return Number(res.lastInsertRowid)
+export async function createPost(input: PostInput): Promise<number> {
+  const res = await run(
+    `INSERT INTO posts (title, slug, excerpt, content, cover_image, cover_alt, category_id, tags, status, featured,
+                        meta_title, meta_description, noindex, author_name, published_at)
+     VALUES (@title, @slug, @excerpt, @content, @cover_image, @cover_alt, @category_id, @tags, @status, @featured,
+             @meta_title, @meta_description, @noindex, @author_name, @published_at)`,
+    toRow(input),
+  )
+  return res.lastInsertRowid
 }
 
-export function updatePost(id: number, input: PostInput) {
-  getDb()
-    .prepare(
-      `UPDATE posts SET title = @title, slug = @slug, excerpt = @excerpt, content = @content,
-              cover_image = @cover_image, cover_alt = @cover_alt, category_id = @category_id, tags = @tags,
-              status = @status, featured = @featured, meta_title = @meta_title,
-              meta_description = @meta_description, noindex = @noindex, author_name = @author_name,
-              published_at = @published_at, updated_at = @updated_at
-        WHERE id = @id`,
-    )
-    .run({ ...toRow(input), id, updated_at: nowIso() })
+export async function updatePost(id: number, input: PostInput) {
+  await run(
+    `UPDATE posts SET title = @title, slug = @slug, excerpt = @excerpt, content = @content,
+            cover_image = @cover_image, cover_alt = @cover_alt, category_id = @category_id, tags = @tags,
+            status = @status, featured = @featured, meta_title = @meta_title,
+            meta_description = @meta_description, noindex = @noindex, author_name = @author_name,
+            published_at = @published_at, updated_at = @updated_at
+      WHERE id = @id`,
+    { ...toRow(input), id, updated_at: nowIso() },
+  )
 }
 
-export function deletePost(id: number) {
-  getDb().prepare('DELETE FROM posts WHERE id = ?').run(id)
+export async function deletePost(id: number) {
+  await run('DELETE FROM posts WHERE id = ?', [id])
 }
 
-export function listAllLiveForSitemap() {
-  return getDb()
-    .prepare(
-      `SELECT slug, updated_at, published_at, noindex, cover_image, content FROM posts p WHERE ${LIVE} ORDER BY p.published_at DESC`,
-    )
-    .all({ now: nowIso() }) as Array<{
+export async function listAllLiveForSitemap() {
+  return all<{
     slug: string
     updated_at: string
     published_at: string
     noindex: number
     cover_image: string
     content: string
-  }>
+  }>(
+    `SELECT slug, updated_at, published_at, noindex, cover_image, content FROM posts p WHERE ${LIVE} ORDER BY p.published_at DESC`,
+    { now: nowIso() },
+  )
 }
 
 /** Short plain-text summary: the excerpt, or the start of the article body. */
@@ -214,21 +205,20 @@ export function postSummary(post: Pick<Post, 'excerpt' | 'content'>, max = 150):
 }
 
 /** The live posts published just before and just after this one (for previous/next links). */
-export function getAdjacentPosts(post: Post): { older?: Post; newer?: Post } {
+export async function getAdjacentPosts(post: Post): Promise<{ older?: Post; newer?: Post }> {
   if (!post.published_at) return {}
   const params = { now: nowIso(), pub: post.published_at, id: post.id }
-  const db = getDb()
-  const older = db
-    .prepare(
+  const [older, newer] = await Promise.all([
+    get<Post>(
       `${SELECT} WHERE ${LIVE} AND (p.published_at < @pub OR (p.published_at = @pub AND p.id < @id))
        ORDER BY p.published_at DESC, p.id DESC LIMIT 1`,
-    )
-    .get(params) as Post | undefined
-  const newer = db
-    .prepare(
+      params,
+    ),
+    get<Post>(
       `${SELECT} WHERE ${LIVE} AND (p.published_at > @pub OR (p.published_at = @pub AND p.id > @id))
        ORDER BY p.published_at ASC, p.id ASC LIMIT 1`,
-    )
-    .get(params) as Post | undefined
+      params,
+    ),
+  ])
   return { older, newer }
 }

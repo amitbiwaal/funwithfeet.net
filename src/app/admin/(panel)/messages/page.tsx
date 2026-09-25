@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: 'Messages' }
 
 export default async function MessagesPage() {
   await requireAdmin()
-  const messages = listMessages()
+  const messages = await listMessages()
   const unread = messages.filter((m) => !m.is_read).length
 
   return (

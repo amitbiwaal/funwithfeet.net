@@ -23,8 +23,7 @@ export default async function PostsPage({ searchParams }: { searchParams: Promis
   const statusParam = param(sp.status)
   const filter = (FILTERS.some((f) => f.key === statusParam) ? statusParam : 'all') as AdminPostFilter
   const q = param(sp.q).trim().slice(0, 80)
-  const posts = listPostsForAdmin(filter, q)
-  const counts = postCounts()
+  const [posts, counts] = await Promise.all([listPostsForAdmin(filter, q), postCounts()])
   const countFor: Record<AdminPostFilter, number> = {
     all: counts.total,
     published: counts.published ?? 0,

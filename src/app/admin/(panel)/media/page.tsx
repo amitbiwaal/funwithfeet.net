@@ -14,7 +14,7 @@ const SAVED: Record<string, string> = { deleted: 'Image deleted.', alt: 'Alt tex
 export default async function MediaPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await requireAdmin()
   const sp = await searchParams
-  const items = listMedia()
+  const items = await listMedia()
 
   return (
     <>

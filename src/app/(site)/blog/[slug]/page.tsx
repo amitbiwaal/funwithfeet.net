@@ -17,7 +17,7 @@ type Props = { params: Promise<{ slug: string }> }
 
 /** Published posts are public; drafts and scheduled posts are visible only to signed-in admins. */
 async function loadPost(slug: string): Promise<{ post: Post; live: boolean } | null> {
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlug(slug)
   if (!post) return null
   const live = isLive(post)
   if (!live && !(await getCurrentUser())) return null
@@ -65,8 +65,8 @@ export default async function ArticlePage({ params }: Props) {
   const tags = parseTags(post.tags)
   const author = post.author_name || SITE.editorialAuthor
   const minutes = readingMinutes(post.content)
-  const related = live ? getRelatedPosts(post, 3) : []
-  const { older, newer } = live ? getAdjacentPosts(post) : {}
+  const related = live ? await getRelatedPosts(post, 3) : []
+  const { older, newer } = live ? await getAdjacentPosts(post) : {}
   const url = absoluteUrl(`/blog/${post.slug}`)
   const wasUpdated =
     post.published_at && new Date(post.updated_at).getTime() - new Date(post.published_at).getTime() > 86_400_000
