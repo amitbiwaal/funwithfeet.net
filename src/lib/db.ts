@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Client, InArgs, InStatement, ResultSet } from '@libsql/client'
-import { seedDatabase } from './seed'
+import { seedDatabase, syncAdminFromEnv } from './seed'
 
 /**
  * CMS storage. In production the database is Turso (hosted SQLite): set
@@ -174,6 +174,7 @@ async function open(): Promise<DB> {
   try {
     await migrate(db)
     await seedDatabase(db)
+    await syncAdminFromEnv(db)
   } catch (e) {
     db.close()
     throw e

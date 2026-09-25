@@ -27,7 +27,7 @@ Forgot the password? Run:
 npm run admin:create -- admin@funwithfeet.net "a-new-long-password"
 ```
 
-This changes the local database. For the live site, run it with the live database's `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` set in your shell.
+This changes the local database. For the live site, run it with the live database's `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` set in your shell. Simpler: put a new `ADMIN_PASSWORD` in Vercel and redeploy. Whenever `ADMIN_EMAIL`/`ADMIN_PASSWORD` change, the next start resets that account to them. A password changed in Admin → Account is kept until then.
 
 ## Writing a blog post
 
@@ -120,7 +120,7 @@ Vercel has no persistent disk, so the live site keeps its database in Turso and 
 1. Import the GitHub repository in Vercel. The Next.js defaults are fine.
 2. **Database:** add Turso to the project (Vercel → Storage, or create a database at turso.tech). The project needs `TURSO_DATABASE_URL` (`libsql://…`) and `TURSO_AUTH_TOKEN`. If the integration adds them under a prefix, rename them. Choose the location closest to your Vercel Functions region (by default Washington, D.C., which is AWS `us-east-1`).
 3. **Images:** Vercel → Storage → create a **Blob** store and connect it to the project. Vercel adds the credentials. If you create a *private* store, also set `BLOB_ACCESS=private`.
-4. **Admin account:** set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in Settings → Environment Variables **before the first visit**. The first request creates the tables, this admin, and the starter content.
+4. **Admin account:** set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in Settings → Environment Variables. The first request creates the tables, this admin, and the starter content. If you change these values later and redeploy, that admin's password is reset to them and its devices are signed out.
 5. Redeploy. Environment variable changes only apply to new deployments.
 
 If the database variables are missing, every page fails and the function logs say `TURSO_DATABASE_URL is not set`.
