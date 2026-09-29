@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PostGrid } from '@/components/blog/PostCard'
 import { LogoMark } from '@/components/site/LogoMark'
+import { findAuthor } from '@/lib/authors'
 import { Breadcrumb, CtaButton, JsonLd } from '@/components/site/ui'
 import { getCurrentUser } from '@/lib/auth'
 import { renderContent, type TocItem } from '@/lib/content'
@@ -64,6 +65,7 @@ export default async function ArticlePage({ params }: Props) {
   const { html, toc } = renderContent(post.content, { inlineCta: true })
   const tags = parseTags(post.tags)
   const author = post.author_name || SITE.editorialAuthor
+  const authorProfile = findAuthor(post.author_name)
   const minutes = readingMinutes(post.content)
   const related = live ? await getRelatedPosts(post, 3) : []
   const { older, newer } = live ? await getAdjacentPosts(post) : {}
@@ -167,13 +169,24 @@ export default async function ArticlePage({ params }: Props) {
               )}
 
               <div className="author-box">
-                <LogoMark />
+                {authorProfile ? (
+                  <img className="author-avatar" src={authorProfile.avatar} alt={`Portrait of ${authorProfile.name}`} width={72} height={72} loading="lazy" />
+                ) : (
+                  <LogoMark />
+                )}
                 <div>
-                  <strong>{author}</strong>
-                  <p>
-                    Independent guides for creators who want to sell feet pics safely and privately.{' '}
-                    <Link href="/about">About our editorial standards</Link>.
-                  </p>
+                  <strong>
+                    {author}
+                    {authorProfile && <span className="author-role"> · {authorProfile.role}</span>}
+                  </strong>
+                  {authorProfile ? (
+                    <p>{authorProfile.bio}</p>
+                  ) : (
+                    <p>
+                      Independent guides for creators who want to sell feet pics safely and privately.{' '}
+                      <Link href="/about">About our editorial standards</Link>.
+                    </p>
+                  )}
                 </div>
               </div>
 
