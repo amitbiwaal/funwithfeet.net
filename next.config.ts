@@ -7,8 +7,8 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ]
 
-// Same switch as SITE_NOINDEX in src/lib/site.ts: until SITE_NOINDEX=false, every response says noindex.
-const noindex = process.env.SITE_NOINDEX !== 'false'
+// Same switch as SITE_NOINDEX in src/lib/site.ts: the site is indexed unless SITE_NOINDEX=true, which makes every response say noindex.
+const noindex = process.env.SITE_NOINDEX === 'true'
 
 const nextConfig: NextConfig = {
   // E2E runs build into their own folder so they never touch a running `next dev`.

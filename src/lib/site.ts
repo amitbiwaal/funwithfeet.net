@@ -48,13 +48,13 @@ export const FOOTER_LINKS = {
 } as const
 
 /**
- * While true, every page and file tells search engines not to index it (robots
+ * When true, every page and file tells search engines not to index it (robots
  * meta tag and X-Robots-Tag header), and robots.txt stops listing the sitemap.
- * To appear in search results, set SITE_NOINDEX=false in the environment
- * (Vercel → Settings → Environment Variables) and redeploy. next.config.ts
- * reads the same variable for the header.
+ * The site is indexed by default; to hide the whole site again, set
+ * SITE_NOINDEX=true in the environment (Vercel → Settings → Environment
+ * Variables) and redeploy. next.config.ts reads the same variable for the header.
  */
-export const SITE_NOINDEX = process.env.SITE_NOINDEX !== 'false'
+export const SITE_NOINDEX = process.env.SITE_NOINDEX === 'true'
 
 /** Absolute URL for a site path. */
 export function absoluteUrl(path = '/'): string {

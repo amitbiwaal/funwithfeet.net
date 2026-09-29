@@ -6,8 +6,8 @@ export function NoindexNotice() {
   return (
     <p className="adm-alert info" role="status" data-testid="noindex-notice">
       <span>
-        Search engines are told not to index this site (noindex). To appear in Google, set{' '}
-        <code>SITE_NOINDEX=false</code> in Vercel → Settings → Environment Variables and redeploy.
+        Search engines are told not to index this site (noindex). To appear in Google, remove{' '}
+        <code>SITE_NOINDEX</code> (or set it to <code>false</code>) in Vercel → Settings → Environment Variables and redeploy.
       </span>
     </p>
   )
